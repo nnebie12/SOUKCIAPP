@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { router } from 'expo-router';
-import { LogOut, Store, Settings, Phone, Heart, Star, ChevronRight, PlusCircle } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
+import { router } from 'expo-router';
+import { ChevronRight, FileText, Heart, LogOut, Phone, PlusCircle, Settings, Shield, Store, Trash2 } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 interface MerchantStats {
   shopName: string;
@@ -190,15 +190,48 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Data protection */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Protection des données</Text>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push('/legal/privacy')}>
+            <View style={styles.menuIcon}><Shield size={20} color={Colors.status.info} /></View>
+            <Text style={styles.menuItemText}>Politique de confidentialité</Text>
+            <ChevronRight size={18} color={Colors.text.secondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push('/legal/data-rights')}>
+            <View style={styles.menuIcon}><FileText size={20} color={Colors.primary} /></View>
+            <Text style={styles.menuItemText}>Mes droits sur mes données</Text>
+            <ChevronRight size={18} color={Colors.text.secondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push('/legal/delete-account')}>
+            <View style={styles.menuIcon}><Trash2 size={20} color={Colors.status.error} /></View>
+            <Text style={styles.menuItemText}>Suppression de compte</Text>
+            <ChevronRight size={18} color={Colors.text.secondary} />
+          </TouchableOpacity>
+        </View>
+
         {/* About */}
         <View style={styles.section}>
           <View style={styles.aboutCard}>
             <Text style={styles.aboutTitle}>SoukCI v1.0.0</Text>
             <Text style={styles.aboutText}>La plateforme qui réunit les boutiques de Côte d'Ivoire</Text>
             <View style={styles.aboutLinks}>
-              <TouchableOpacity><Text style={styles.aboutLink}>Conditions d'utilisation</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/legal/privacy')}>
+                <Text style={styles.aboutLink}>Confidentialité</Text>
+              </TouchableOpacity>
               <Text style={styles.dot}>•</Text>
-              <TouchableOpacity><Text style={styles.aboutLink}>Confidentialité</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/legal/data-rights')}>
+                <Text style={styles.aboutLink}>Droits utilisateur</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>

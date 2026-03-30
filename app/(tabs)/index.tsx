@@ -1,25 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  ActivityIndicator,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadius } from '@/constants/theme';
-import { SearchBar } from '@/components/SearchBar';
 import { CategoryCard } from '@/components/CategoryCard';
-import { ShopCard } from '@/components/ShopCard';
 import { PromoCard } from '@/components/PromoCard';
-import { supabase } from '@/lib/supabase';
-import { Shop, Category, Promotion } from '@/types/database';
+import { SearchBar } from '@/components/SearchBar';
+import { ShopCard } from '@/components/ShopCard';
+import { BorderRadius, Colors, FontSizes, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { router } from 'expo-router';
-import { MapPin, TrendingUp, Tag, Map, Clock } from 'lucide-react-native';
+import { MOCK_CATEGORIES, MOCK_PROMOTIONS, MOCK_SHOPS_WITH_RELATIONS } from '@/data/mockData';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
+import { supabase } from '@/lib/supabase';
+import { Category, Promotion, Shop } from '@/types/database';
+import { router } from 'expo-router';
+import { Clock, Map, MapPin, Tag, TrendingUp } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+
+function mergeById<T extends { id: string }>(primary: T[] = [], fallback: T[] = []): T[] {
+  const seen = new Set<string>();
+  const merged: T[] = [];
+  for (const item of [...primary, ...fallback]) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    merged.push(item);
+  }
+  return merged;
+}
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -63,17 +75,41 @@ export default function HomeScreen() {
           .limit(8),
       ]);
 
-      if (categoriesRes.data) setCategories(categoriesRes.data);
-      if (shopsRes.data) {
-        setFeaturedShops(shopsRes.data.filter((s) => s.is_premium).slice(0, 5));
-        setPopularShops(shopsRes.data.slice(0, 10));
-      }
+      const mergedCategories = mergeById(categoriesRes.data ?? [], MOCK_CATEGORIES);
+      const mergedShops = mergeById(shopsRes.data ?? [], MOCK_SHOPS_WITH_RELATIONS)
+        .filter((s) => s.is_active)
+        .sort((a, b) => {
+          if (Number(b.is_premium) !== Number(a.is_premium)) {
+            return Number(b.is_premium) - Number(a.is_premium);
+          }
+          return b.rating_avg - a.rating_avg;
+        });
+      const mergedPromos = mergeById(
+        (promosRes.data as (Promotion & { shop?: { id: string; name: string } })[] | null) ?? [],
+        MOCK_PROMOTIONS
+      ).filter((p) => p.is_active);
+
+      setCategories(mergedCategories);
+      setFeaturedShops(mergedShops.filter((s) => s.is_premium).slice(0, 5));
+      setPopularShops(mergedShops.slice(0, 10));
       if (favoritesRes.data) {
         setFavorites(new Set(favoritesRes.data.map((f: any) => f.shop_id)));
       }
-      if (promosRes.data) setActivePromos(promosRes.data as any);
+      setActivePromos(mergedPromos);
     } catch (error) {
       console.error('Error loading data:', error);
+      const fallbackShops = MOCK_SHOPS_WITH_RELATIONS
+        .filter((s) => s.is_active)
+        .sort((a, b) => {
+          if (Number(b.is_premium) !== Number(a.is_premium)) {
+            return Number(b.is_premium) - Number(a.is_premium);
+          }
+          return b.rating_avg - a.rating_avg;
+        });
+      setCategories(MOCK_CATEGORIES);
+      setFeaturedShops(fallbackShops.filter((s) => s.is_premium).slice(0, 5));
+      setPopularShops(fallbackShops.slice(0, 10));
+      setActivePromos(MOCK_PROMOTIONS);
     } finally {
       setLoading(false);
       setRefreshing(false);

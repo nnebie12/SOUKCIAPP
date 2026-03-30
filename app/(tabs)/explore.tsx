@@ -1,22 +1,68 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadius } from '@/constants/theme';
 import { SearchBar } from '@/components/SearchBar';
 import { ShopCard } from '@/components/ShopCard';
-import { supabase } from '@/lib/supabase';
-import { Shop, Category, City } from '@/types/database';
+import { BorderRadius, Colors, FontSizes, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLocalSearchParams, router } from 'expo-router';
-import { ListFilter as Filter, MapPin, Star, Truck, Clock, Tag } from 'lucide-react-native';
+import { MOCK_CATEGORIES, MOCK_CITIES, MOCK_PROMOTIONS, MOCK_SHOPS_WITH_RELATIONS } from '@/data/mockData';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
+import { supabase } from '@/lib/supabase';
+import { Category, City, Shop } from '@/types/database';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Clock, ListFilter as Filter, Star, Tag, Truck } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    ActivityIndicator,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+
+function mergeById<T extends { id: string }>(primary: T[] = [], fallback: T[] = []): T[] {
+  const seen = new Set<string>();
+  const merged: T[] = [];
+  for (const item of [...primary, ...fallback]) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    merged.push(item);
+  }
+  return merged;
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function normalizeCategoryLabel(value?: string | null): string {
+  if (!value) return '';
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function shopMatchesCategory(
+  shop: any,
+  selectedCategoryId: string,
+  categories: Category[]
+): boolean {
+  if (!selectedCategoryId) return true;
+
+  if (shop.category_id === selectedCategoryId) return true;
+
+  const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
+  const selectedKey = normalizeCategoryLabel(selectedCategory?.name_fr || selectedCategory?.name);
+  if (!selectedKey) return false;
+
+  const shopCategoryFromRelation = shop.category as Category | undefined;
+  const shopCategoryFromList = categories.find((c) => c.id === shop.category_id);
+  const shopCategory = shopCategoryFromRelation || shopCategoryFromList;
+  const shopKey = normalizeCategoryLabel(shopCategory?.name_fr || shopCategory?.name);
+
+  return !!shopKey && shopKey === selectedKey;
+}
 
 // Check if a shop is currently open based on its hours
 function isShopOpenNow(hours?: { day_of_week: number; opens_at: string | null; closes_at: string | null; is_closed: boolean }[]): boolean {
@@ -63,17 +109,17 @@ export default function ExploreScreen() {
       if (searchQuery.trim().length >= 2) addToHistory(searchQuery.trim());
       loadShops();
     }, 400);
-  }, [filters, searchQuery]);
+  }, [filters, searchQuery, categories]);
   useEffect(() => { if (user) loadFavorites(); }, [user]);
 
   const loadCategories = async () => {
     const { data } = await supabase.from('categories').select('*').order('name_fr');
-    if (data) setCategories(data);
+    setCategories(mergeById(data ?? [], MOCK_CATEGORIES));
   };
 
   const loadCities = async () => {
     const { data } = await supabase.from('cities').select('*').order('name');
-    if (data) setCities(data);
+    setCities(mergeById(data ?? [], MOCK_CITIES));
   };
 
   const loadShops = async () => {
@@ -84,8 +130,8 @@ export default function ExploreScreen() {
         .select('*, category:categories(*), city:cities(*), hours:shop_hours(*), promotions(*)')
         .eq('is_active', true);
 
-      if (filters.categoryId) query = query.eq('category_id', filters.categoryId);
-      if (filters.cityId) query = query.eq('city_id', filters.cityId);
+      if (filters.categoryId && isUuid(filters.categoryId)) query = query.eq('category_id', filters.categoryId);
+      if (filters.cityId && isUuid(filters.cityId)) query = query.eq('city_id', filters.cityId);
       if (filters.hasDelivery) query = query.eq('has_delivery', true);
       if (filters.isVerified) query = query.eq('is_verified', true);
       if (filters.minRating > 0) query = query.gte('rating_avg', filters.minRating);
@@ -99,7 +145,27 @@ export default function ExploreScreen() {
         .limit(50);
 
       if (error) throw error;
-      let result = data || [];
+      const mockShopsForExplore = MOCK_SHOPS_WITH_RELATIONS.map((shop) => ({
+        ...shop,
+        promotions: MOCK_PROMOTIONS.filter((p) => p.shop_id === shop.id),
+      }));
+
+      let result = mergeById((data as any[]) ?? [], mockShopsForExplore).filter((shop: any) => {
+        if (!shop.is_active) return false;
+        if (filters.categoryId && !shopMatchesCategory(shop, filters.categoryId, categories)) return false;
+        if (filters.cityId && shop.city_id !== filters.cityId) return false;
+        if (filters.hasDelivery && !shop.has_delivery) return false;
+        if (filters.isVerified && !shop.is_verified) return false;
+        if (filters.minRating > 0 && (shop.rating_avg ?? 0) < filters.minRating) return false;
+
+        if (searchQuery.trim()) {
+          const term = searchQuery.trim().toLowerCase();
+          const target = `${shop.name ?? ''} ${shop.description ?? ''}`.toLowerCase();
+          if (!target.includes(term)) return false;
+        }
+
+        return true;
+      });
 
       // Client-side filters
       if (filters.isOpenNow) {
@@ -112,6 +178,34 @@ export default function ExploreScreen() {
       setShops(result);
     } catch (error) {
       console.error('Error loading shops:', error);
+      const mockShopsForExplore = MOCK_SHOPS_WITH_RELATIONS.map((shop) => ({
+        ...shop,
+        promotions: MOCK_PROMOTIONS.filter((p) => p.shop_id === shop.id),
+      }));
+      let result = mockShopsForExplore.filter((shop: any) => {
+        if (!shop.is_active) return false;
+        if (filters.categoryId && !shopMatchesCategory(shop, filters.categoryId, categories)) return false;
+        if (filters.cityId && shop.city_id !== filters.cityId) return false;
+        if (filters.hasDelivery && !shop.has_delivery) return false;
+        if (filters.isVerified && !shop.is_verified) return false;
+        if (filters.minRating > 0 && (shop.rating_avg ?? 0) < filters.minRating) return false;
+
+        if (searchQuery.trim()) {
+          const term = searchQuery.trim().toLowerCase();
+          const target = `${shop.name ?? ''} ${shop.description ?? ''}`.toLowerCase();
+          if (!target.includes(term)) return false;
+        }
+
+        return true;
+      });
+
+      if (filters.isOpenNow) {
+        result = result.filter((s: any) => isShopOpenNow(s.hours));
+      }
+      if (filters.hasPromo) {
+        result = result.filter((s: any) => s.promotions && s.promotions.some((p: any) => p.is_active));
+      }
+      setShops(result as any);
     } finally {
       setLoading(false);
     }

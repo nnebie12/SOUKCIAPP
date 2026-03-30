@@ -200,3 +200,114 @@ Pour toute question ou problème, contactez l'équipe SoukCI.
 ## Licence
 
 Tous droits réservés © 2024 SoukCI
+
+
+# SoukCI — Guide d'intégration des nouveaux fichiers
+
+## Structure des fichiers livrés
+
+```
+soukci-evolution/
+├── supabase/migrations/
+│   └── 20260330000001_cart_orders_campaigns.sql   ← Livrable 1
+├── types/
+│   └── database.ts                                ← Livrable 2
+├── data/
+│   └── mockData.ts                                ← Données fictives dev
+├── contexts/
+│   └── CartContext.tsx                            ← Livrable 3
+├── hooks/
+│   ├── useReviews.ts                              ← Livrable 4a
+│   ├── useCart.ts                                 ← Livrable 4b
+│   └── useStats.ts                                ← Livrable 4c
+├── components/
+│   ├── ReviewCard.tsx        (ReviewCard + ReviewModal)
+│   ├── CartDrawer.tsx        (CartDrawer + CartItemRow)
+│   ├── StatsCard.tsx         (StatsCard + MiniChart)
+│   ├── ShareButton.tsx       (ShareButton + FavoriteBtn)
+│   └── CampaignPlanCard.tsx
+└── app/
+    ├── cart.tsx                                   ← Livrable 7
+    ├── orders.tsx                                 ← Livrable 7
+    ├── campaigns.tsx                              ← Livrable 8
+    ├── auth/
+    │   └── register.tsx                           ← Livrable 5
+    └── shop/
+        └── merchant.tsx                           ← Livrable 6
+```
+
+---
+
+## Étapes d'intégration
+
+### 1. Migration SQL
+Lancez la migration dans votre dashboard Supabase :
+```
+supabase/migrations/20260330000001_cart_orders_campaigns.sql
+```
+Elle crée les tables `cart_items`, `orders`, `order_items`, `campaign_plans`, `campaigns` et étend `reviews`.
+
+### 2. Remplacer les fichiers existants
+Copiez chaque fichier à sa destination dans votre projet en respectant la structure ci-dessus.
+
+### 3. Entourer l'app avec CartProvider
+Dans `app/_layout.tsx`, ajoutez `CartProvider` :
+
+```tsx
+import { CartProvider } from '@/contexts/CartContext';
+
+// Dans le return :
+<AuthProvider>
+  <CartProvider>
+    <Stack>
+      {/* ... */}
+      <Stack.Screen name="cart"     options={{ headerShown: false }} />
+      <Stack.Screen name="orders"   options={{ headerShown: false }} />
+      <Stack.Screen name="campaigns" options={{ headerShown: false }} />
+    </Stack>
+  </CartProvider>
+</AuthProvider>
+```
+
+### 4. Mettre à jour signUp dans AuthContext
+La nouvelle page register passe un objet `options` à `signUp` :
+```ts
+await signUp(email, password, fullName, phone, {
+  is_merchant: true,
+  business_type: 'individual' | 'company' | null,
+});
+```
+
+Adaptez la signature de `signUp` dans `AuthContext.tsx` :
+```ts
+const signUp = async (
+  email: string,
+  password: string,
+  fullName: string,
+  phone: string,
+  options?: { is_merchant?: boolean; business_type?: string | null }
+) => { ... }
+```
+
+Et transmettez `options.is_merchant` lors de l'upsert de `user_profiles`.
+
+### 5. Ajouter `business_type` à la table user_profiles
+```sql
+ALTER TABLE user_profiles
+  ADD COLUMN IF NOT EXISTS business_type text
+    CHECK (business_type IN ('individual', 'company'));
+```
+
+### 6. Accès aux nouvelles routes
+- Panier : `router.push('/cart')`
+- Commandes : `router.push('/orders')`
+- Campagnes : `router.push('/campaigns')`
+
+---
+
+## Notes importantes
+
+- **CartDrawer** peut être utilisé depuis n'importe quel écran via `<CartDrawer visible={show} onClose={() => setShow(false)} />`.
+- **FavoriteBtn** et **ShareButton** s'utilisent directement dans la fiche boutique (`app/shop/[id].tsx`).
+- **ReviewCard + ReviewModal** s'intègrent dans `app/shop/[id].tsx` via `useReviews(shopId)`.
+- Les **données fictives** (`data/mockData.ts`) sont utilisées comme fallback quand Supabase n'est pas disponible.
