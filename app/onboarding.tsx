@@ -11,6 +11,8 @@ import {
 import { Colors, Spacing, FontSizes, BorderRadius } from '@/constants/theme';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -47,17 +49,22 @@ const SLIDES = [
 
 const ONBOARDING_KEY = 'soukci_onboarding_done';
 
-export function markOnboardingDone() {
-  if (Platform.OS === 'web') {
-    try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch {}
-  }
-}
 
-export function hasSeenOnboarding(): boolean {
+export async function hasSeenOnboarding(): Promise<boolean> {
   if (Platform.OS === 'web') {
     try { return localStorage.getItem(ONBOARDING_KEY) === '1'; } catch {}
+    return false;
   }
-  return false;
+  const val = await AsyncStorage.getItem(ONBOARDING_KEY);
+  return val === '1';
+}
+
+export async function markOnboardingDone() {
+  if (Platform.OS === 'web') {
+    try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch {}
+    return;
+  }
+  await AsyncStorage.setItem(ONBOARDING_KEY, '1');
 }
 
 export default function OnboardingScreen() {
