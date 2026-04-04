@@ -1,8 +1,8 @@
+import { Colors, FontSizes, Spacing } from '@/constants/theme';
 import NetInfo from '@react-native-community/netinfo';
+import { Wifi, WifiOff } from 'lucide-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Text, StyleSheet, Animated } from 'react-native';
-import { Colors, Spacing, FontSizes } from '@/constants/theme';
-import { WifiOff, Wifi } from 'lucide-react-native';
+import { Animated, StyleSheet, Text } from 'react-native';
 
 export function OfflineBanner() {
   const [isOffline, setIsOffline] = useState(false);
