@@ -1,30 +1,30 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import {
-  Mail,
-  Lock,
-  User,
-  Phone,
-  Store,
-  UserCircle,
-  ChevronRight,
-  Eye,
-  EyeOff,
-} from 'lucide-react-native';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
+import {
+    ChevronRight,
+    Eye,
+    EyeOff,
+    Lock,
+    Mail,
+    Phone,
+    Store,
+    User,
+    UserCircle,
+} from 'lucide-react-native';
+import React, { useState } from 'react';
+import {
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 // ─── Types ────────────────────────────────────────────────────────
 
