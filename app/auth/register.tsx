@@ -389,9 +389,9 @@ export default function RegisterScreen() {
           {/* CGU */}
           <Text style={styles.cgu}>
             En vous inscrivant, vous acceptez nos{' '}
-            <Text style={styles.cguLink}>Conditions d'utilisation</Text>
+            <Text style={styles.cguLink} onPress={() => router.push('/legal/terms')}>Conditions d'utilisation</Text>
             {' '}et notre{' '}
-            <Text style={styles.cguLink}>Politique de confidentialité</Text>.
+            <Text style={styles.cguLink} onPress={() => router.push('/legal/privacy')}>Politique de confidentialité</Text>.
           </Text>
 
           <View style={styles.loginRow}>
