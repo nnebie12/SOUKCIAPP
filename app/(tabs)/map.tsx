@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ActivityIndicator,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-  Linking,
-} from 'react-native';
-import { WebView } from 'react-native-webview';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { Shop } from '@/types/database';
-import { MapPin, Navigation, X } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { MapPin, Navigation, X } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Linking,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { WebView } from 'react-native-webview';
 
 const RADIUS_OPTIONS = [1, 2, 5, 10, 20];
 

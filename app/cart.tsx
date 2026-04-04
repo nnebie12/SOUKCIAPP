@@ -1,23 +1,23 @@
+import { CartItemRow } from '@/components/CartDrawer';
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
+import { supabase } from '@/lib/supabase';
+import { PaymentMethod } from '@/types/database';
+import { router } from 'expo-router';
+import { ArrowLeft, MapPin, MessageSquare, ShoppingBag } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  TextInput,
+    ActivityIndicator,
+    Alert,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { ArrowLeft, ShoppingBag, MapPin, MessageSquare } from 'lucide-react-native';
-import { router } from 'expo-router';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
-import { useCart } from '@/contexts/CartContext';
-import { CartItemRow } from '@/components/CartDrawer';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { PaymentMethod } from '@/types/database';
 
 const PAYMENT_METHODS: { key: PaymentMethod; label: string; color: string }[] = [
   { key: 'wave',         label: '🌊 Wave',         color: '#FF6B35' },

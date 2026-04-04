@@ -1,16 +1,16 @@
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
+import { Check, ChevronRight, Phone, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  Alert,
-  View,
-  Text,
-  StyleSheet,
-  Modal,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
+    ActivityIndicator,
+    Alert,
+    Modal,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
-import { X, Check, ChevronRight, Phone } from 'lucide-react-native';
 
 type PaymentMethod = 'wave' | 'orange_money' | 'mtn_money';
 

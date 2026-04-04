@@ -1,6 +1,6 @@
-import { Tabs } from 'expo-router';
-import { House, Search, Heart, User, Map } from 'lucide-react-native';
 import { Colors } from '@/constants/theme';
+import { Tabs } from 'expo-router';
+import { Heart, House, Map, Search, User } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
