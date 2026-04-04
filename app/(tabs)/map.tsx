@@ -10,10 +10,11 @@ import {
   Platform,
   Linking,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { Shop } from '@/types/database';
-import { MapPin, Navigation, Minus, Plus, X } from 'lucide-react-native';
+import { MapPin, Navigation, X } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 const RADIUS_OPTIONS = [1, 2, 5, 10, 20];
@@ -88,13 +89,9 @@ export default function MapScreen() {
 
   useEffect(() => {
     requestLocation();
-  }, []);
+  }, [requestLocation]);
 
-  useEffect(() => {
-    if (location) loadNearbyShops();
-  }, [location, radius]);
-
-  const loadNearbyShops = async () => {
+  const loadNearbyShops = useCallback(async () => {
     if (!location) return;
     setLoading(true);
     try {
@@ -121,7 +118,11 @@ export default function MapScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [location, radius]);
+
+  useEffect(() => {
+    if (location) loadNearbyShops();
+  }, [loadNearbyShops, location]);
 
   const openInMaps = (shop: NearbyShop) => {
     if (!shop.latitude || !shop.longitude) return;
@@ -135,6 +136,10 @@ export default function MapScreen() {
       );
     });
   };
+
+  const mapUrl = location
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.1},${location.lat - 0.1},${location.lng + 0.1},${location.lat + 0.1}&layer=mapnik&marker=${location.lat},${location.lng}`
+    : null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -154,18 +159,15 @@ export default function MapScreen() {
               width="100%"
               height="100%"
               style={{ border: 'none' }}
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.1},${location.lat - 0.1},${location.lng + 0.1},${location.lat + 0.1}&layer=mapnik&marker=${location.lat},${location.lng}`}
+              src={mapUrl || undefined}
             />
           ) : (
-            <View style={styles.mapNativePlaceholder}>
-              <MapPin size={48} color={Colors.primary} />
-              <Text style={styles.mapPlaceholderText}>
-                Carte — {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
-              </Text>
-              <Text style={styles.mapPlaceholderSub}>
-                Installez react-native-maps pour une carte native
-              </Text>
-            </View>
+            <WebView
+              source={{ uri: mapUrl || 'https://www.openstreetmap.org' }}
+              style={styles.nativeMap}
+              setSupportMultipleWindows={false}
+              originWhitelist={['*']}
+            />
           )
         ) : (
           <View style={styles.mapNativePlaceholder}>
@@ -286,6 +288,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: Colors.background.tertiary,
     ...Shadows.md,
+  },
+  nativeMap: {
+    flex: 1,
+    backgroundColor: Colors.background.tertiary,
   },
   mapNativePlaceholder: {
     flex: 1,

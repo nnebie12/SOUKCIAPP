@@ -6,9 +6,9 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  FlatList,
   Alert,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { ArrowLeft, ShoppingBag, MapPin, MessageSquare } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -172,13 +172,15 @@ export default function CartScreen() {
               <MapPin size={16} color={Colors.primary} />
               <Text style={styles.sectionTitle}>Adresse de livraison</Text>
             </View>
-            <View style={styles.inputBox}>
-              <Text
-                style={[styles.inputText, !address && styles.placeholder]}
-                onPress={() => {/* TODO: ouvrir un sélecteur d'adresse */}}>
-                {address || 'Ajouter une adresse (optionnel)'}
-              </Text>
-            </View>
+            <TextInput
+              style={styles.textInput}
+              value={address}
+              onChangeText={setAddress}
+              placeholder="Ajouter une adresse (optionnel)"
+              placeholderTextColor={Colors.text.light}
+              autoCapitalize="sentences"
+              returnKeyType="done"
+            />
           </View>
 
           {/* Note */}
@@ -187,12 +189,16 @@ export default function CartScreen() {
               <MessageSquare size={16} color={Colors.primary} />
               <Text style={styles.sectionTitle}>Note pour le commerçant</Text>
             </View>
-            <View style={styles.inputBox}>
-              <Text
-                style={[styles.inputText, !notes && styles.placeholder]}>
-                {notes || 'Ajouter une note (optionnel)'}
-              </Text>
-            </View>
+            <TextInput
+              style={[styles.textInput, styles.notesInput]}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Ajouter une note (optionnel)"
+              placeholderTextColor={Colors.text.light}
+              autoCapitalize="sentences"
+              multiline
+              textAlignVertical="top"
+            />
           </View>
 
           {/* Mode de paiement */}
@@ -332,16 +338,16 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     marginBottom: Spacing.sm,
   },
-  inputBox: {
+  textInput: {
     backgroundColor: Colors.background.secondary,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     minHeight: 44,
-    justifyContent: 'center',
-  },
-  inputText: {
     fontSize: FontSizes.md,
     color: Colors.text.primary,
+  },
+  notesInput: {
+    minHeight: 92,
   },
   placeholder: {
     color: Colors.text.light,

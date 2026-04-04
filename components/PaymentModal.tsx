@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -7,7 +8,6 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Animated,
 } from 'react-native';
 import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
 import { X, Check, ChevronRight, Phone } from 'lucide-react-native';
@@ -22,6 +22,7 @@ interface PaymentModalProps {
   acceptsWave?: boolean;
   acceptsOrangeMoney?: boolean;
   acceptsMtnMoney?: boolean;
+  onSubmitPayment?: (payload: { method: PaymentMethod; phone: string }) => Promise<void> | void;
 }
 
 const PAYMENT_METHODS = [
@@ -61,6 +62,7 @@ export function PaymentModal({
   acceptsWave = true,
   acceptsOrangeMoney = true,
   acceptsMtnMoney = true,
+  onSubmitPayment,
 }: PaymentModalProps) {
   const [step, setStep] = useState<Step>('select');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
@@ -100,11 +102,23 @@ export function PaymentModal({
   };
 
   const handlePay = async () => {
-    setLoading(true);
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setLoading(false);
-    setStep('success');
+    if (!selectedMethod) return;
+
+    try {
+      setLoading(true);
+      if (onSubmitPayment) {
+        await onSubmitPayment({ method: selectedMethod, phone: phone.replace(/\s/g, '') });
+        setStep('success');
+        return;
+      }
+
+      Alert.alert(
+        'Paiement non integre',
+        'Le paiement mobile n est pas encore relie a un fournisseur. La commande doit etre finalisee depuis le panier ou via le commerçant.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderStepIndicator = () => (
