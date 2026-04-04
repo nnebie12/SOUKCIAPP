@@ -9,4 +9,6 @@ npm-debug.log*
 .expo
 .expo/
 .expo/*
+.env
+.env.*
 # @end expo-cli
