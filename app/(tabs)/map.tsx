@@ -218,7 +218,7 @@ export default function MapScreen() {
               <TouchableOpacity
                 key={shop.id}
                 style={styles.shopRow}
-                onPress={() => router.push(`/shop/${shop.id}`)}>
+                onPress={() => router.push({ pathname: '/shop/[id]', params: { id: shop.id } })}>
                 <View style={styles.shopRowLeft}>
                   <View style={styles.shopIcon}>
                     <MapPin size={18} color={Colors.primary} />
@@ -253,7 +253,7 @@ export default function MapScreen() {
           </Text>
           <TouchableOpacity
             style={styles.shopModalButton}
-            onPress={() => router.push(`/shop/${selectedShop.id}`)}>
+            onPress={() => router.push({ pathname: '/shop/[id]', params: { id: selectedShop.id } })}>
             <Text style={styles.shopModalButtonText}>Voir la boutique</Text>
           </TouchableOpacity>
         </View>

@@ -13,7 +13,7 @@ interface ShopCardProps {
 
 export function ShopCard({ shop, onFavoritePress, isFavorite = false }: ShopCardProps) {
   const handlePress = () => {
-    router.push(`/shop/${shop.id}`);
+    router.push({ pathname: '/shop/[id]', params: { id: shop.id } });
   };
 
   const getPaymentMethods = () => {

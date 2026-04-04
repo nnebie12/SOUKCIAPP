@@ -58,7 +58,7 @@ export function useLocation(): UseLocationResult {
           setLocation({
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
+            accuracy: pos.coords.accuracy ?? undefined,
           });
         }
       } catch {

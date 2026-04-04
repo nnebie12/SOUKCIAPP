@@ -8,13 +8,19 @@ interface SearchBarProps {
   onChangeText: (text: string) => void;
   placeholder?: string;
   onClear?: () => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  onSubmitEditing?: () => void;
 }
 
 export function SearchBar({
   value,
   onChangeText,
   placeholder = 'Rechercher une boutique, un produit...',
-  onClear
+  onClear,
+  onFocus,
+  onBlur,
+  onSubmitEditing,
 }: SearchBarProps) {
   return (
     <View style={styles.container}>
@@ -23,8 +29,12 @@ export function SearchBar({
         style={styles.input}
         value={value}
         onChangeText={onChangeText}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onSubmitEditing={onSubmitEditing}
         placeholder={placeholder}
         placeholderTextColor={Colors.text.secondary}
+        returnKeyType="search"
       />
       {value.length > 0 && onClear && (
         <TouchableOpacity onPress={onClear} style={styles.clearButton}>

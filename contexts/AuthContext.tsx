@@ -9,8 +9,15 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    phone: string,
+    options?: { is_merchant?: boolean; business_type?: string | null }
+  ) => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -86,31 +93,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (
-  email: string,
-  password: string,
-  fullName: string,
-  phone: string,
-  options?: { is_merchant?: boolean; business_type?: string | null }
-) => {
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) throw error;
-  if (data.user) {
-    const { error: profileError } = await supabase
-      .from('user_profiles')
-      .insert({
-        id: data.user.id,
-        full_name: fullName,
-        phone: phone,
-        is_merchant: options?.is_merchant ?? false,
-        business_type: options?.business_type ?? null,
-      });
-    if (profileError) throw profileError;
-  }
-};
+    email: string,
+    password: string,
+    fullName: string,
+    phone: string,
+    options?: { is_merchant?: boolean; business_type?: string | null }
+  ) => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: data.user.id,
+          full_name: fullName,
+          phone,
+          is_merchant: options?.is_merchant ?? false,
+          business_type: options?.business_type ?? null,
+        });
+      if (profileError) throw profileError;
+    }
+  };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+  };
+
+  const deleteAccount = async () => {
+    const { data, error } = await supabase.functions.invoke('delete-account', {
+      body: { source: 'mobile-app' },
+    });
+
+    if (error) throw error;
+    if (!data?.success) {
+      throw new Error(data?.error || 'La suppression du compte a echoue.');
+    }
+
+    await signOut();
   };
 
   return (
@@ -123,6 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        deleteAccount,
         refreshProfile,
       }}
     >

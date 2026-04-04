@@ -25,7 +25,7 @@ export function PromoCard({ promo }: PromoCardProps) {
   return (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => promo.shop && router.push(`/shop/${promo.shop.id}`)}
+      onPress={() => promo.shop && router.push({ pathname: '/shop/[id]', params: { id: promo.shop.id } })}
       activeOpacity={0.85}>
       <View style={[styles.badge, { backgroundColor: Colors.primary }]}>
         <Tag size={14} color={Colors.white} />

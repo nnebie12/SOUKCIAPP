@@ -147,7 +147,7 @@ export default function ProfileScreen() {
             </View>
             <TouchableOpacity
               style={styles.manageShopBtn}
-              onPress={() => router.push(`/shop/${merchantStats.shopId}`)}>
+              onPress={() => router.push({ pathname: '/shop/[id]', params: { id: merchantStats.shopId } })}>
               <Text style={styles.manageShopBtnText}>Voir ma boutique</Text>
             </TouchableOpacity>
           </View>

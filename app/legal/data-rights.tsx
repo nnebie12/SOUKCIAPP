@@ -1,12 +1,19 @@
+import { PUBLIC_DATA_RIGHTS_URL, SUPPORT_EMAIL } from '@/constants/legal';
 import { BorderRadius, Colors, FontSizes, Spacing } from '@/constants/theme';
 import React from 'react';
-import { Linking, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const SUPPORT_EMAIL = 'privacy@soukci.app';
+async function openUrl(url: string) {
+  try {
+    await Linking.openURL(url);
+  } catch {
+    Alert.alert('Erreur', 'Impossible d ouvrir ce lien pour le moment.');
+  }
+}
 
 async function openSupportMail(subject: string) {
   const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`;
-  await Linking.openURL(mailto);
+  await openUrl(mailto);
 }
 
 export default function DataRightsScreen() {
@@ -15,7 +22,7 @@ export default function DataRightsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Mes droits sur mes donnees</Text>
         <Text style={styles.subtitle}>
-          Vous pouvez exercer vos droits a tout moment en envoyant une demande a l'equipe support.
+          Vous pouvez exercer vos droits a tout moment depuis l application ou via la page publique de SoukCI.
         </Text>
 
         <View style={styles.card}>
@@ -46,6 +53,10 @@ export default function DataRightsScreen() {
           <Text style={styles.contactTitle}>Contact protection des donnees</Text>
           <Text style={styles.contactText}>{SUPPORT_EMAIL}</Text>
         </View>
+
+        <TouchableOpacity style={styles.publicLinkButton} onPress={() => openUrl(PUBLIC_DATA_RIGHTS_URL)}>
+          <Text style={styles.publicLinkButtonText}>Ouvrir la page publique de droits utilisateur</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -122,5 +133,18 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.md,
     fontWeight: '700',
     color: Colors.primary,
+  },
+  publicLinkButton: {
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  publicLinkButtonText: {
+    color: Colors.text.primary,
+    fontSize: FontSizes.sm,
+    fontWeight: '700',
   },
 });

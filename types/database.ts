@@ -24,7 +24,7 @@ export interface UserProfile {
   phone: string | null;
   avatar_url: string | null;
   is_merchant: boolean;
-  business_type: 'individual' | 'company' | null;  // ← nouveau
+  business_type: 'individual' | 'company' | null;  
   city_id: string | null;
   created_at: string;
   updated_at: string;
@@ -39,8 +39,8 @@ export interface Shop {
   city_id: string | null;
   address: string | null;
   neighborhood: string | null;
-  latitude: number | null;
-  longitude: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
   phone: string | null;
   whatsapp: string | null;
   email: string | null;

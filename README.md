@@ -197,6 +197,20 @@ Pour contribuer :
 
 Pour toute question ou problème, contactez l'équipe SoukCI.
 
+### URLs legales publiques
+
+- Politique de confidentialite: https://soukci.app/legal/privacy
+- Droits utilisateur: https://soukci.app/legal/data-rights
+- Suppression de compte: https://soukci.app/legal/delete-account
+
+Ces URLs doivent etre publiees sur le site web de production avant soumission Play Store.
+
+### Suppression de compte backend
+
+- Fonction Supabase Edge attendue: supabase/functions/delete-account
+- Secret requis cote Supabase: SUPABASE_SERVICE_ROLE_KEY
+- La suppression reelle du compte passe par la fonction serveur, puis les donnees applicatives sont nettoyees par cascades SQL quand elles referencent auth.users.
+
 ## Licence
 
 Tous droits réservés © 2024 SoukCI
