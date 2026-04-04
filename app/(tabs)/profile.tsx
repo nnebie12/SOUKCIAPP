@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
 import { ChevronRight, FileText, Heart, LogOut, Phone, PlusCircle, Settings, Shield, Store, Trash2 } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     SafeAreaView,
@@ -28,13 +28,7 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [merchantStats, setMerchantStats] = useState<MerchantStats | null>(null);
 
-  useEffect(() => {
-    if (user && profile?.is_merchant) {
-      loadMerchantStats();
-    }
-  }, [user, profile]);
-
-  const loadMerchantStats = async () => {
+  const loadMerchantStats = useCallback(async () => {
     if (!user) return;
     try {
       const { data: shop } = await supabase
@@ -61,7 +55,13 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user && profile?.is_merchant) {
+      loadMerchantStats();
+    }
+  }, [loadMerchantStats, profile, user]);
 
   const handleSignOut = async () => {
     try {
@@ -183,7 +183,7 @@ export default function ProfileScreen() {
             <ChevronRight size={18} color={Colors.text.secondary} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/settings')}>
             <View style={styles.menuIcon}><Settings size={20} color={Colors.text.secondary} /></View>
             <Text style={styles.menuItemText}>Paramètres</Text>
             <ChevronRight size={18} color={Colors.text.secondary} />

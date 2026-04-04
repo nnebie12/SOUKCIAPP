@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, Platform } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Text, StyleSheet, Animated } from 'react-native';
 import { Colors, Spacing, FontSizes } from '@/constants/theme';
 import { WifiOff, Wifi } from 'lucide-react-native';
 
@@ -9,50 +10,61 @@ export function OfflineBanner() {
   const slideAnim = useRef(new Animated.Value(-60)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      const handleOnline = () => {
-        setWasOffline(true);
-        setIsOffline(false);
-        // Show "back online" briefly then hide
-        if (hideTimer.current) clearTimeout(hideTimer.current);
-        hideTimer.current = setTimeout(() => {
-          hide();
-          setWasOffline(false);
-        }, 3000);
-      };
-      const handleOffline = () => {
-        setIsOffline(true);
-        setWasOffline(false);
-      };
-
-      window.addEventListener('online', handleOnline);
-      window.addEventListener('offline', handleOffline);
-      setIsOffline(!navigator.onLine);
-
-      return () => {
-        window.removeEventListener('online', handleOnline);
-        window.removeEventListener('offline', handleOffline);
-        if (hideTimer.current) clearTimeout(hideTimer.current);
-      };
-    }
-  }, []);
-
-  const show = () => {
+  const show = useCallback(() => {
     Animated.spring(slideAnim, {
       toValue: 0,
       useNativeDriver: true,
       friction: 8,
     }).start();
-  };
+  }, [slideAnim]);
 
-  const hide = () => {
+  const hide = useCallback(() => {
     Animated.timing(slideAnim, {
       toValue: -60,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  };
+  }, [slideAnim]);
+
+  useEffect(() => {
+    const hideOnlineMessage = () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      hideTimer.current = setTimeout(() => {
+        hide();
+        setWasOffline(false);
+      }, 3000);
+    };
+
+    const updateConnectionState = (connected: boolean) => {
+      if (connected) {
+        if (isOffline) {
+          setWasOffline(true);
+          hideOnlineMessage();
+        }
+        setIsOffline(false);
+        return;
+      }
+
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      setWasOffline(false);
+      setIsOffline(true);
+    };
+
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const connected = Boolean(state.isConnected) && state.isInternetReachable !== false;
+      updateConnectionState(connected);
+    });
+
+    NetInfo.fetch().then((state) => {
+      const connected = Boolean(state.isConnected) && state.isInternetReachable !== false;
+      updateConnectionState(connected);
+    });
+
+    return () => {
+      unsubscribe();
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    };
+  }, [hide, isOffline]);
 
   useEffect(() => {
     if (isOffline || wasOffline) {
@@ -60,7 +72,7 @@ export function OfflineBanner() {
     } else {
       hide();
     }
-  }, [isOffline, wasOffline]);
+  }, [hide, isOffline, show, wasOffline]);
 
   if (!isOffline && !wasOffline) return null;
 
