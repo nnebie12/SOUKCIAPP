@@ -3,6 +3,7 @@ import { WebFooter } from '@/components/WebFooter';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+import '@/lib/monitoring';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';

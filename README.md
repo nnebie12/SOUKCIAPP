@@ -112,11 +112,32 @@ npm install
 
 ### Variables d'Environnement
 
-Les variables Supabase sont déjà configurées dans `.env`:
+Copiez `.env.example` vers `.env` en local. Ne partagez jamais `.env` dans un ZIP ou un export manuel du projet.
+
+Variables locales requises:
 ```
 EXPO_PUBLIC_SUPABASE_URL=votre_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=votre_clé
+EXPO_PUBLIC_SENTRY_DSN=votre_dsn_sentry
 ```
+
+### Secrets EAS
+
+Pour les builds de production, n'incluez pas `.env` dans l'archive du projet. Injectez les secrets directement dans EAS :
+
+```bash
+eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_URL --value "votre_url"
+eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "votre_clé"
+eas secret:create --scope project --name EXPO_PUBLIC_SENTRY_DSN --value "votre_dsn_sentry"
+```
+
+Le projet fournit aussi une archive sûre sans fichiers locaux sensibles :
+
+```bash
+npm run archive:safe
+```
+
+Cette commande génère `SoukCI-source.zip` à partir des fichiers suivis par Git, donc sans `.env`.
 
 ### Développement
 

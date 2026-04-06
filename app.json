@@ -3,7 +3,7 @@
     "name": "SoukCI",
     "slug": "soukci",
     "version": "1.0.0",
-    "description": "Plateforme de decouverte de boutiques et commerces en Cote d Ivoire.",
+    "description": "Plateforme de découverte de boutiques et commerces en Côte d’Ivoire.",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "soukci",
@@ -49,7 +49,8 @@
         {
           "locationWhenInUsePermission": "SoukCI utilise votre position pour afficher les boutiques proches de vous."
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true

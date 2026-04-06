@@ -1,0 +1,6 @@
+.env
+.env.*
+.venv/
+node_modules/
+.expo/
+SoukCI-source.zip
