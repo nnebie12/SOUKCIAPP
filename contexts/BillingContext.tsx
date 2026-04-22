@@ -1,7 +1,7 @@
 import { PREMIUM_ENTITLEMENT_ID, PREMIUM_OFFERING_ID } from '@/constants/billing';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
 import { configureRevenueCat, Purchases } from '@/lib/revenuecat';
+import { supabase } from '@/lib/supabase';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
 

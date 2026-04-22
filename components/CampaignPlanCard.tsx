@@ -1,13 +1,13 @@
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
+import { CampaignPlan } from '@/types/database';
+import { Check, Rocket, Star, Zap } from 'lucide-react-native';
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Check, Star, Zap, Rocket } from 'lucide-react-native';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
-import { CampaignPlan } from '@/types/database';
 
 interface CampaignPlanCardProps {
   plan: CampaignPlan;

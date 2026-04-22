@@ -1,6 +1,6 @@
+import { getRevenueCatApiKey } from '@/constants/billing';
 import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
-import { getRevenueCatApiKey } from '@/constants/billing';
 
 let configured = false;
 
