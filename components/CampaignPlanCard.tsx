@@ -13,6 +13,8 @@ interface CampaignPlanCardProps {
   plan: CampaignPlan;
   selected?: boolean;
   onSelect?: (plan: CampaignPlan) => void;
+  priceCaption?: string;
+  ctaLabel?: string;
 }
 
 const PLAN_CONFIG: Record<
@@ -28,6 +30,8 @@ export function CampaignPlanCard({
   plan,
   selected = false,
   onSelect,
+  priceCaption,
+  ctaLabel,
 }: CampaignPlanCardProps) {
   const config = PLAN_CONFIG[plan.name] ?? PLAN_CONFIG.basic;
   const PlanIcon = config.icon;
@@ -60,12 +64,18 @@ export function CampaignPlanCard({
       </Text>
 
       {/* Prix */}
-      <View style={styles.priceRow}>
-        <Text style={styles.price}>
-          {plan.price_fcfa.toLocaleString('fr-CI')}
-        </Text>
-        <Text style={styles.priceCurrency}> FCFA</Text>
-      </View>
+      {priceCaption ? (
+        <View style={styles.priceCaptionBox}>
+          <Text style={styles.priceCaption}>{priceCaption}</Text>
+        </View>
+      ) : (
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>
+            {plan.price_fcfa.toLocaleString('fr-CI')}
+          </Text>
+          <Text style={styles.priceCurrency}> FCFA</Text>
+        </View>
+      )}
       <Text style={styles.duration}>{plan.duration_days} jours</Text>
 
       {/* Features */}
@@ -91,7 +101,7 @@ export function CampaignPlanCard({
             styles.ctaText,
             { color: selected ? Colors.white : config.color },
           ]}>
-          {selected ? 'Sélectionné ✓' : 'Choisir ce forfait'}
+          {selected ? 'Sélectionné ✓' : (ctaLabel ?? 'Choisir ce forfait')}
         </Text>
       </TouchableOpacity>
     </TouchableOpacity>
@@ -154,6 +164,18 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.md,
     color: Colors.text.secondary,
     fontWeight: '600',
+  },
+  priceCaptionBox: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.primary + '12',
+    borderRadius: BorderRadius.round,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+  },
+  priceCaption: {
+    fontSize: FontSizes.sm,
+    color: Colors.primary,
+    fontWeight: '700',
   },
   duration: {
     fontSize: FontSizes.sm,

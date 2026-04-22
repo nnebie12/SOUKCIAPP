@@ -1,5 +1,6 @@
 import { SearchBar } from '@/components/SearchBar';
 import { ShopCard } from '@/components/ShopCard';
+import { isMockFallbackEnabled, mergeByIdWithOptionalFallback } from '@/constants/runtime';
 import { BorderRadius, Colors, FontSizes, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { MOCK_CATEGORIES, MOCK_CITIES, MOCK_PROMOTIONS, MOCK_SHOPS_WITH_RELATIONS } from '@/data/mockData';
@@ -8,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { Category, City, Shop } from '@/types/database';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Clock, ListFilter as Filter, Star, Tag, Truck } from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     SafeAreaView,
@@ -18,17 +19,6 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-
-function mergeById<T extends { id: string }>(primary: T[] = [], fallback: T[] = []): T[] {
-  const seen = new Set<string>();
-  const merged: T[] = [];
-  for (const item of [...primary, ...fallback]) {
-    if (seen.has(item.id)) continue;
-    seen.add(item.id);
-    merged.push(item);
-  }
-  return merged;
-}
 
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -102,27 +92,17 @@ export default function ExploreScreen() {
     hasPromo: false,
   });
 
-  useEffect(() => { loadCategories(); loadCities(); }, []);
-  useEffect(() => {
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => {
-      if (searchQuery.trim().length >= 2) addToHistory(searchQuery.trim());
-      loadShops();
-    }, 400);
-  }, [filters, searchQuery, categories]);
-  useEffect(() => { if (user) loadFavorites(); }, [user]);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     const { data } = await supabase.from('categories').select('*').order('name_fr');
-    setCategories(mergeById(data ?? [], MOCK_CATEGORIES));
-  };
+    setCategories(mergeByIdWithOptionalFallback(data, MOCK_CATEGORIES));
+  }, []);
 
-  const loadCities = async () => {
+  const loadCities = useCallback(async () => {
     const { data } = await supabase.from('cities').select('*').order('name');
-    setCities(mergeById(data ?? [], MOCK_CITIES));
-  };
+    setCities(mergeByIdWithOptionalFallback(data, MOCK_CITIES));
+  }, []);
 
-  const loadShops = async () => {
+  const loadShops = useCallback(async () => {
     try {
       setLoading(true);
       let query = supabase
@@ -150,7 +130,7 @@ export default function ExploreScreen() {
         promotions: MOCK_PROMOTIONS.filter((p) => p.shop_id === shop.id),
       }));
 
-      let result = mergeById((data as any[]) ?? [], mockShopsForExplore).filter((shop: any) => {
+      let result = mergeByIdWithOptionalFallback(data as any[] | null, mockShopsForExplore).filter((shop: any) => {
         if (!shop.is_active) return false;
         if (filters.categoryId && !shopMatchesCategory(shop, filters.categoryId, categories)) return false;
         if (filters.cityId && shop.city_id !== filters.cityId) return false;
@@ -178,6 +158,10 @@ export default function ExploreScreen() {
       setShops(result);
     } catch (error) {
       console.error('Error loading shops:', error);
+      if (!isMockFallbackEnabled) {
+        setShops([]);
+        return;
+      }
       const mockShopsForExplore = MOCK_SHOPS_WITH_RELATIONS.map((shop) => ({
         ...shop,
         promotions: MOCK_PROMOTIONS.filter((p) => p.shop_id === shop.id),
@@ -209,13 +193,27 @@ export default function ExploreScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, searchQuery, categories]);
 
-  const loadFavorites = async () => {
+  const loadFavorites = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase.from('favorites').select('shop_id').eq('user_id', user.id);
     if (data) setFavorites(new Set(data.map((f) => f.shop_id)));
-  };
+  }, [user]);
+
+  useEffect(() => { loadCategories(); loadCities(); }, [loadCategories, loadCities]);
+  useEffect(() => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      if (searchQuery.trim().length >= 2) addToHistory(searchQuery.trim());
+      loadShops();
+    }, 400);
+
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    };
+  }, [addToHistory, loadShops, searchQuery]);
+  useEffect(() => { if (user) loadFavorites(); }, [user, loadFavorites]);
 
   const handleFavoritePress = async (shopId: string) => {
     if (!user) { router.push('/auth/login'); return; }

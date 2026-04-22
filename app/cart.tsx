@@ -1,4 +1,5 @@
 import { CartItemRow } from '@/components/CartDrawer';
+import { isCinetPayMethod, isValidCinetPayAmount, normalizeAmountForCinetPay } from '@/constants/billing';
 import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
@@ -6,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { PaymentMethod } from '@/types/database';
 import { router } from 'expo-router';
 import { ArrowLeft, MapPin, MessageSquare, ShoppingBag } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -27,24 +28,41 @@ const PAYMENT_METHODS: { key: PaymentMethod; label: string; color: string }[] = 
 ];
 
 export default function CartScreen() {
-  const { user } = useAuth();
-  const { items, totalAmount, clearCart, loading } = useCart();
+  const { user, profile } = useAuth();
+  const { items, clearCart, loading } = useCart();
 
   const [address, setAddress]             = useState('');
   const [notes, setNotes]                 = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('wave');
   const [submitting, setSubmitting]       = useState(false);
 
-  const deliveryFee = items.some((i) => i.shop?.has_delivery) ? 500 : 0;
-  const grandTotal  = totalAmount + deliveryFee;
+  const shopGroups = useMemo(() => {
+    const groupedItems = items.reduce<Record<string, typeof items>>((acc, item) => {
+      const key = item.shop_id;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(item);
+      return acc;
+    }, {});
 
-  // Regrouper les articles par boutique
-  const shopGroups = items.reduce<Record<string, typeof items>>((acc, item) => {
-    const key = item.shop_id;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(item);
-    return acc;
-  }, {});
+    return Object.entries(groupedItems).map(([shopId, shopItems]) => {
+      const deliveryFee = shopItems[0]?.shop?.has_delivery ? 500 : 0;
+      const subtotal = shopItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+
+      return {
+        shopId,
+        shopName: shopItems[0]?.shop?.name ?? 'Boutique',
+        items: shopItems,
+        subtotal,
+        deliveryFee,
+        totalAmount: subtotal + deliveryFee,
+      };
+    });
+  }, [items]);
+
+  const grandTotal = useMemo(
+    () => shopGroups.reduce((sum, group) => sum + group.totalAmount, 0),
+    [shopGroups]
+  );
 
   const handleOrder = async () => {
     if (!user) {
@@ -56,53 +74,100 @@ export default function CartScreen() {
     try {
       setSubmitting(true);
 
-      // Créer une commande par boutique
-      for (const [shopId, shopItems] of Object.entries(shopGroups)) {
-        const shopTotal = shopItems.reduce(
-          (s, i) => s + i.product.price * i.quantity,
-          0
+      if (paymentMethod === 'cash') {
+        for (const group of shopGroups) {
+          const { data: order, error: orderErr } = await supabase
+            .from('orders')
+            .insert({
+              user_id: user.id,
+              shop_id: group.shopId,
+              status: 'pending',
+              total_amount: group.totalAmount,
+              delivery_address: address || null,
+              delivery_fee: group.deliveryFee,
+              payment_method: paymentMethod,
+              payment_status: 'pending',
+              notes: notes || null,
+            })
+            .select('id')
+            .single();
+
+          if (orderErr) throw orderErr;
+
+          const orderItems = group.items.map((item) => ({
+            order_id: order.id,
+            product_id: item.product_id,
+            name: item.product.name,
+            price: item.product.price,
+            quantity: item.quantity,
+          }));
+
+          const { error: itemsErr } = await supabase.from('order_items').insert(orderItems);
+          if (itemsErr) throw itemsErr;
+        }
+
+        await clearCart();
+
+        Alert.alert(
+          'Commande enregistrée',
+          'Votre commande a été envoyée. Le commerçant finalisera le règlement à la livraison ou au retrait.',
+          [{ text: 'Voir mes commandes', onPress: () => router.push('/orders') }]
         );
 
-        const { data: order, error: orderErr } = await supabase
-          .from('orders')
-          .insert({
-            user_id:          user.id,
-            shop_id:          shopId,
-            status:           'pending',
-            total_amount:     shopTotal + deliveryFee,
-            delivery_address: address || null,
-            delivery_fee:     deliveryFee,
-            payment_method:   paymentMethod,
-            payment_status:   'pending',
-            notes:            notes || null,
-          })
-          .select('id')
-          .single();
-
-        if (orderErr) throw orderErr;
-
-        const orderItems = shopItems.map((i) => ({
-          order_id:   order.id,
-          product_id: i.product_id,
-          name:       i.product.name,
-          price:      i.product.price,
-          quantity:   i.quantity,
-        }));
-
-        const { error: itemsErr } = await supabase
-          .from('order_items')
-          .insert(orderItems);
-
-        if (itemsErr) throw itemsErr;
+        return;
       }
 
-      await clearCart();
+      const payableAmount = normalizeAmountForCinetPay(grandTotal);
+      if (!isValidCinetPayAmount(payableAmount)) {
+        Alert.alert(
+          'Montant non supporté',
+          'Le montant CinetPay doit être un multiple de 5 FCFA. Ajustez votre panier ou le mode de paiement.'
+        );
+        return;
+      }
 
-      Alert.alert(
-        'Commande passée ! 🎉',
-        'Votre commande a été envoyée. Le commerçant vous contactera sous peu.',
-        [{ text: 'Voir mes commandes', onPress: () => router.push('/orders') }]
-      );
+      const { data, error } = await supabase.functions.invoke('create-cinetpay-payment', {
+        body: {
+          amount: payableAmount,
+          description: `Commande SoukCI - ${shopGroups.length} boutique(s)`,
+          address: address || null,
+          notes: notes || null,
+          paymentMethod,
+          customer: {
+            name: profile?.full_name ?? user.email ?? 'Client SoukCI',
+            surname: profile?.full_name ?? 'SoukCI',
+            email: user.email ?? 'support@soukci.app',
+            phone: profile?.phone ?? '',
+            address: address || 'Abidjan',
+            city: 'Abidjan',
+          },
+          shopGroups: shopGroups.map((group) => ({
+            shopId: group.shopId,
+            shopName: group.shopName,
+            deliveryFee: group.deliveryFee,
+            totalAmount: group.totalAmount,
+            items: group.items.map((item) => ({
+              productId: item.product_id,
+              name: item.product.name,
+              price: item.product.price,
+              quantity: item.quantity,
+            })),
+          })),
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.sessionId || !data?.checkoutUrl) {
+        throw new Error('La session de paiement n a pas pu être créée.');
+      }
+
+      router.push({
+        pathname: '/payments/cinetpay-checkout',
+        params: {
+          sessionId: data.sessionId,
+          checkoutUrl: data.checkoutUrl,
+        },
+      });
     } catch (err: any) {
       Alert.alert('Erreur', err.message ?? 'Une erreur est survenue');
     } finally {
@@ -155,14 +220,18 @@ export default function CartScreen() {
           contentContainerStyle={styles.scroll}>
 
           {/* Articles par boutique */}
-          {Object.entries(shopGroups).map(([shopId, shopItems]) => (
-            <View key={shopId} style={styles.shopSection}>
+          {shopGroups.map((group) => (
+            <View key={group.shopId} style={styles.shopSection}>
               <Text style={styles.shopSectionTitle}>
-                🏪 {shopItems[0].shop?.name ?? 'Boutique'}
+                🏪 {group.shopName}
               </Text>
-              {shopItems.map((item) => (
+              {group.items.map((item) => (
                 <CartItemRow key={item.id} item={item} />
               ))}
+              <View style={styles.shopTotalRow}>
+                <Text style={styles.summaryLabel}>Total boutique</Text>
+                <Text style={styles.summaryValue}>{group.totalAmount.toLocaleString('fr-CI')} FCFA</Text>
+              </View>
             </View>
           ))}
 
@@ -201,9 +270,14 @@ export default function CartScreen() {
             />
           </View>
 
-          {/* Mode de paiement */}
+          {/* Mode de règlement */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Mode de paiement</Text>
+            <Text style={styles.sectionHelp}>
+              {isCinetPayMethod(paymentMethod)
+                ? 'Le paiement sera finalisé immédiatement dans l application via CinetPay.'
+                : 'Le règlement sera finalisé directement avec le commerçant à la livraison ou au retrait.'}
+            </Text>
             <View style={styles.paymentGrid}>
               {PAYMENT_METHODS.map((m) => (
                 <TouchableOpacity
@@ -233,14 +307,14 @@ export default function CartScreen() {
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Sous-total</Text>
               <Text style={styles.summaryValue}>
-                {totalAmount.toLocaleString('fr-CI')} FCFA
+                {shopGroups.reduce((sum, group) => sum + group.subtotal, 0).toLocaleString('fr-CI')} FCFA
               </Text>
             </View>
-            {deliveryFee > 0 && (
+            {shopGroups.some((group) => group.deliveryFee > 0) && (
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Livraison</Text>
                 <Text style={styles.summaryValue}>
-                  {deliveryFee.toLocaleString('fr-CI')} FCFA
+                  {shopGroups.reduce((sum, group) => sum + group.deliveryFee, 0).toLocaleString('fr-CI')} FCFA
                 </Text>
               </View>
             )}
@@ -261,7 +335,7 @@ export default function CartScreen() {
               <ActivityIndicator color={Colors.white} />
             ) : (
               <Text style={styles.orderBtnText}>
-                Commander · {grandTotal.toLocaleString('fr-CI')} FCFA
+                {isCinetPayMethod(paymentMethod) ? 'Payer maintenant' : 'Commander'} · {grandTotal.toLocaleString('fr-CI')} FCFA
               </Text>
             )}
           </TouchableOpacity>
@@ -319,6 +393,15 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     marginBottom: Spacing.sm,
   },
+  shopTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+  },
   section: {
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.xl,
@@ -337,6 +420,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.text.primary,
     marginBottom: Spacing.sm,
+  },
+  sectionHelp: {
+    fontSize: FontSizes.sm,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.md,
+    lineHeight: 20,
   },
   textInput: {
     backgroundColor: Colors.background.secondary,

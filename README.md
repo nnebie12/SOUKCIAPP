@@ -119,7 +119,16 @@ Variables locales requises:
 EXPO_PUBLIC_SUPABASE_URL=votre_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=votre_clé
 EXPO_PUBLIC_SENTRY_DSN=votre_dsn_sentry
+EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=votre_cle_android_revenuecat
+EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=votre_cle_ios_revenuecat
 ```
+
+Variable optionnelle de developpement:
+```
+EXPO_PUBLIC_ENABLE_MOCK_FALLBACK=1
+```
+
+Par defaut, les builds de production n'affichent plus les donnees mock. Activez cette variable uniquement pour des demonstrations ou tests hors production.
 
 ### Secrets EAS
 
@@ -129,6 +138,17 @@ Pour les builds de production, n'incluez pas `.env` dans l'archive du projet. In
 eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_URL --value "votre_url"
 eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "votre_clé"
 eas secret:create --scope project --name EXPO_PUBLIC_SENTRY_DSN --value "votre_dsn_sentry"
+eas secret:create --scope project --name EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY --value "votre_cle_android_revenuecat"
+eas secret:create --scope project --name EXPO_PUBLIC_REVENUECAT_IOS_API_KEY --value "votre_cle_ios_revenuecat"
+```
+
+Secrets Supabase Edge Functions requis:
+```
+CINETPAY_API_KEY=votre_cle_api_cinetpay
+CINETPAY_SITE_ID=votre_site_id_cinetpay
+CINETPAY_RETURN_URL=https://soukci.app/payments/return
+REVENUECAT_SECRET_KEY=votre_secret_api_revenuecat
+SUPABASE_SERVICE_ROLE_KEY=votre_service_role_key
 ```
 
 Le projet fournit aussi une archive sûre sans fichiers locaux sensibles :
@@ -168,9 +188,9 @@ npm run typecheck
 2. Créer sa boutique
 3. Accéder au tableau de bord
 4. Ajouter des produits
-5. Publier des promotions
+5. Soumettre des demandes de campagnes
 6. Consulter les statistiques
-7. Opter pour l'abonnement Premium
+7. Demander une mise en avant Premium
 
 ## Sécurité
 
@@ -188,9 +208,15 @@ npm run typecheck
 - Recherche et consultations gratuites
 
 ### Phase 2 (Planifiée)
-- Abonnement Premium pour commerçants (mise en avant, analytics avancées)
-- Publicité ciblée par ville/catégorie
+- Abonnement Premium pour commerçants via Google Play Billing et RevenueCat
+- Campagnes sponsorisées réservées aux boutiques Premium
 - Commissions optionnelles sur les ventes en ligne
+
+Note importante:
+
+- Les commandes Wave, Orange Money et MTN Money ouvrent désormais un checkout CinetPay in-app. Le mode espèces reste un règlement hors ligne avec le commerçant.
+- L abonnement Premium et l accès aux campagnes sont désormais prévus pour être verrouillés via Google Play Billing et RevenueCat côté client, puis resynchronisés côté Supabase.
+- Le plugin de build Sentry n'est pas active dans la configuration Expo tant que l'organisation et le projet Sentry de release ne sont pas configures pour l'upload des sourcemaps.
 
 ## Performance
 
@@ -225,6 +251,12 @@ Pour toute question ou problème, contactez l'équipe SoukCI.
 - Suppression de compte: https://soukci.app/legal/delete-account
 
 Ces URLs doivent etre publiees sur le site web de production avant soumission Play Store.
+
+### Preparation Play Store
+
+- Checklist de soumission: docs/PLAY_STORE_CHECKLIST.md
+- Cartographie Data safety: docs/DATA_SAFETY.md
+- Etat de preparation release: docs/RELEASE_READINESS.md
 
 ### Suppression de compte backend
 

@@ -1,15 +1,15 @@
-import React, { useState, useCallback } from 'react';
-import {
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Share,
-  Alert,
-} from 'react-native';
-import { Heart, Share2 } from 'lucide-react-native';
-import { supabase } from '@/lib/supabase';
+import { Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { Colors, BorderRadius } from '@/constants/theme';
+import { supabase } from '@/lib/supabase';
+import { Heart, Share2 } from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    Share,
+    StyleSheet,
+    TouchableOpacity,
+} from 'react-native';
 
 // ═══════════════════════════════════════════════════════════════════
 // FavoriteBtn

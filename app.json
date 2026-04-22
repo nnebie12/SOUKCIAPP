@@ -16,7 +16,6 @@
     },
     "android": {
       "package": "com.soukci.app",
-      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFF8EF"
@@ -49,8 +48,7 @@
         {
           "locationWhenInUsePermission": "SoukCI utilise votre position pour afficher les boutiques proches de vous."
         }
-      ],
-      "@sentry/react-native"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

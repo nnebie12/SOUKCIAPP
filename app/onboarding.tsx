@@ -1,17 +1,17 @@
-import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  FlatList,
-  Platform,
-} from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadius } from '@/constants/theme';
-import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { BorderRadius, Colors, FontSizes, Spacing } from '@/constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import React, { useRef, useState } from 'react';
+import {
+    Dimensions,
+    FlatList,
+    Platform,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 
 const { width, height } = Dimensions.get('window');
@@ -34,8 +34,8 @@ const SLIDES = [
   {
     id: '3',
     emoji: '📱',
-    title: 'Payez facilement',
-    subtitle: 'Wave, Orange Money, MTN Money — réglez vos achats directement depuis l\'app.',
+    title: 'Commandez simplement',
+    subtitle: 'Payez directement dans l app via CinetPay pour vos commandes et gérez vos avantages Premium avec Google Play Billing.',
     gradient: ['#6C63FF', '#4B44CC'] as [string, string],
   },
   {

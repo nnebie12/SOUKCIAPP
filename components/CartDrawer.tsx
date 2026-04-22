@@ -1,20 +1,20 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  Image,
-  Pressable,
-  ActivityIndicator,
-} from 'react-native';
-import { X, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react-native';
-import { router } from 'expo-router';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
+import { BorderRadius, Colors, FontSizes, Spacing } from '@/constants/theme';
 import { useCart } from '@/contexts/CartContext';
 import { CartItemWithProduct } from '@/types/database';
+import { router } from 'expo-router';
+import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react-native';
+import React from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 // ═══════════════════════════════════════════════════════════════════
 // CartItem

@@ -1,6 +1,7 @@
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { WebFooter } from '@/components/WebFooter';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { BillingProvider } from '@/contexts/BillingContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import '@/lib/monitoring';
@@ -13,24 +14,27 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <CartProvider>
-        <View style={styles.root}>
-          <OfflineBanner />
+      <BillingProvider>
+        <CartProvider>
+          <View style={styles.root}>
+            <OfflineBanner />
 
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" /> {/* 👈 important */}
-            <Stack.Screen name="onboarding" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="auth" />
-            <Stack.Screen name="shop" />
-            <Stack.Screen name="legal" />
-            <Stack.Screen name="+not-found" />
-          </Stack>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="onboarding" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="auth" />
+              <Stack.Screen name="shop" />
+              <Stack.Screen name="payments" />
+              <Stack.Screen name="legal" />
+              <Stack.Screen name="+not-found" />
+            </Stack>
 
-          <WebFooter />
-          <StatusBar style="auto" />
-        </View>
-      </CartProvider>
+            <WebFooter />
+            <StatusBar style="auto" />
+          </View>
+        </CartProvider>
+      </BillingProvider>
     </AuthProvider>
   );
 }

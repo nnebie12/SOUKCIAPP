@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
-import { ArrowLeft, Package, ChevronRight, Clock } from 'lucide-react-native';
-import { router } from 'expo-router';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
-import { supabase } from '@/lib/supabase';
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { Order, OrderStatus } from '@/types/database';
+import { router } from 'expo-router';
+import { ArrowLeft, ChevronRight, Clock, Package } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 // ─── Status config ────────────────────────────────────────────────
 
@@ -48,8 +48,6 @@ function OrderCard({ order }: { order: Order }) {
     hour: '2-digit',
     minute: '2-digit',
   });
-  const itemCount = order.order_items?.length ?? 0;
-
   return (
     <TouchableOpacity style={styles.card} activeOpacity={0.85}>
       {/* En-tête */}

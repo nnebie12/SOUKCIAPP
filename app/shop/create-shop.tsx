@@ -1,38 +1,39 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { router } from 'expo-router';
-import { ArrowLeft, Check, MapPin, Phone, Store } from 'lucide-react-native';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
+import { isMockFallbackEnabled } from '@/constants/runtime';
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { MOCK_CATEGORIES, MOCK_CITIES } from '@/data/mockData';
 import { supabase } from '@/lib/supabase';
 import { Category, City } from '@/types/database';
-import { MOCK_CATEGORIES, MOCK_CITIES } from '@/data/mockData';
+import { router } from 'expo-router';
+import { ArrowLeft, Check, MapPin, Phone, Store } from 'lucide-react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 export default function CreateShopScreen() {
   const { user, profile, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
-  const [cities, setCities] = useState<City[]>(MOCK_CITIES);
+  const [categories, setCategories] = useState<Category[]>(isMockFallbackEnabled ? MOCK_CATEGORIES : []);
+  const [cities, setCities] = useState<City[]>(isMockFallbackEnabled ? MOCK_CITIES : []);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [address, setAddress] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
-  const [categoryId, setCategoryId] = useState<string>(MOCK_CATEGORIES[0]?.id ?? '');
-  const [cityId, setCityId] = useState<string>(MOCK_CITIES[0]?.id ?? '');
+  const [categoryId, setCategoryId] = useState<string>(isMockFallbackEnabled ? (MOCK_CATEGORIES[0]?.id ?? '') : '');
+  const [cityId, setCityId] = useState<string>(isMockFallbackEnabled ? (MOCK_CITIES[0]?.id ?? '') : '');
   const [hasDelivery, setHasDelivery] = useState(false);
   const [acceptsWave, setAcceptsWave] = useState(true);
   const [acceptsOrangeMoney, setAcceptsOrangeMoney] = useState(false);
@@ -60,10 +61,16 @@ export default function CreateShopScreen() {
         if (categoriesRes.data?.length) {
           setCategories(categoriesRes.data as Category[]);
           setCategoryId(categoriesRes.data[0].id);
+        } else if (!isMockFallbackEnabled) {
+          setCategories([]);
+          setCategoryId('');
         }
         if (citiesRes.data?.length) {
           setCities(citiesRes.data as City[]);
           setCityId(citiesRes.data[0].id);
+        } else if (!isMockFallbackEnabled) {
+          setCities([]);
+          setCityId('');
         }
       } finally {
         setLoading(false);
@@ -161,12 +168,20 @@ export default function CreateShopScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Catégorie</Text>
-          <ChipList items={categories.map((category) => ({ id: category.id, label: category.name_fr }))} selectedId={categoryId} onSelect={setCategoryId} />
+          {categories.length > 0 ? (
+            <ChipList items={categories.map((category) => ({ id: category.id, label: category.name_fr }))} selectedId={categoryId} onSelect={setCategoryId} />
+          ) : (
+            <Text style={styles.helperText}>Aucune catégorie disponible pour le moment.</Text>
+          )}
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ville</Text>
-          <ChipList items={cities.map((city) => ({ id: city.id, label: city.name }))} selectedId={cityId} onSelect={setCityId} />
+          {cities.length > 0 ? (
+            <ChipList items={cities.map((city) => ({ id: city.id, label: city.name }))} selectedId={cityId} onSelect={setCityId} />
+          ) : (
+            <Text style={styles.helperText}>Aucune ville disponible pour le moment.</Text>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -216,7 +231,7 @@ function ChipList({
   selectedId,
   onSelect,
 }: {
-  items: Array<{ id: string; label: string }>;
+  items: { id: string; label: string }[];
   selectedId: string;
   onSelect: (id: string) => void;
 }) {
@@ -260,6 +275,7 @@ const styles = StyleSheet.create({
   backText: { color: Colors.text.primary, fontSize: FontSizes.sm, fontWeight: '600' },
   title: { fontSize: FontSizes.xxl, fontWeight: '800', color: Colors.text.primary },
   subtitle: { fontSize: FontSizes.md, color: Colors.text.secondary, lineHeight: 22 },
+  helperText: { fontSize: FontSizes.sm, color: Colors.text.secondary, lineHeight: 20 },
   section: { backgroundColor: Colors.white, borderRadius: BorderRadius.xl, padding: Spacing.md, gap: Spacing.sm, ...Shadows.sm },
   sectionTitle: { fontSize: FontSizes.md, fontWeight: '700', color: Colors.text.primary, marginBottom: Spacing.xs },
   inputRow: {

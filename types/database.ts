@@ -170,6 +170,10 @@ export interface Order {
   delivery_fee: number;
   payment_method: PaymentMethod | null;
   payment_status: PaymentStatus;
+  payment_session_id?: string | null;
+  payment_provider?: string | null;
+  payment_transaction_id?: string | null;
+  paid_at?: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -222,11 +226,27 @@ export interface Campaign {
   starts_at: string;
   ends_at: string | null;
   payment_status: PaymentStatus;
+  payment_provider?: string | null;
+  paid_at?: string | null;
   created_at: string;
   updated_at: string;
   // Relations
   plan?: CampaignPlan;
   shop?: Shop;
+}
+
+export interface PaymentSession {
+  id: string;
+  user_id: string;
+  provider: 'cinetpay';
+  status: 'initiated' | 'pending' | 'paid' | 'failed' | 'cancelled';
+  amount: number;
+  currency: string;
+  transaction_id: string;
+  checkout_url?: string | null;
+  paid_at?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // ─── Stats commerçant ────────────────────────────────────────────────────────

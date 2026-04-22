@@ -1,18 +1,17 @@
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
+import { Review } from '@/types/database';
+import { ChevronDown, ChevronUp, MessageSquare, Star, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  ScrollView,
-  ActivityIndicator,
-  Pressable,
+    ActivityIndicator,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Star, MessageSquare, X, ChevronDown, ChevronUp } from 'lucide-react-native';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
-import { Review } from '@/types/database';
 
 // ═══════════════════════════════════════════════════════════════════
 // ReviewCard

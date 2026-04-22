@@ -1,33 +1,35 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  TextInput,
-  Modal,
-  Pressable,
-} from 'react-native';
-import {
-  ArrowLeft,
-  Megaphone,
-  Plus,
-  TrendingUp,
-  Eye,
-  MousePointer,
-  X,
-} from 'lucide-react-native';
-import { router } from 'expo-router';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
 import { CampaignPlanCard } from '@/components/CampaignPlanCard';
-import { Campaign, CampaignPlan, CampaignStatus } from '@/types/database';
+import { isMockFallbackEnabled } from '@/constants/runtime';
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
+import { useAuth } from '@/contexts/AuthContext';
+import { useBilling } from '@/contexts/BillingContext';
 import { MOCK_CAMPAIGN_PLANS } from '@/data/mockData';
+import { supabase } from '@/lib/supabase';
+import { Campaign, CampaignPlan, CampaignStatus } from '@/types/database';
+import { router } from 'expo-router';
+import {
+    ArrowLeft,
+    Eye,
+    Megaphone,
+    MousePointer,
+    Plus,
+    TrendingUp,
+    X,
+} from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    Modal,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 // ─── Status config ────────────────────────────────────────────────
 
@@ -91,6 +93,7 @@ interface CreateCampaignModalProps {
   shopId: string;
   plans: CampaignPlan[];
   onCreated: () => void;
+  onRequirePremium: () => void;
 }
 
 function CreateCampaignModal({
@@ -99,6 +102,7 @@ function CreateCampaignModal({
   shopId,
   plans,
   onCreated,
+  onRequirePremium,
 }: CreateCampaignModalProps) {
   const [title, setTitle]           = useState('');
   const [description, setDescription] = useState('');
@@ -117,23 +121,20 @@ function CreateCampaignModal({
 
     try {
       setSubmitting(true);
-      const endsAt = new Date();
-      endsAt.setDate(endsAt.getDate() + selectedPlan.duration_days);
-
-      const { error } = await supabase.from('campaigns').insert({
-        shop_id:     shopId,
-        plan_id:     selectedPlan.id,
-        title:       title.trim(),
-        description: description.trim() || null,
-        status:      'draft',
-        ends_at:     endsAt.toISOString(),
+      const { error } = await supabase.functions.invoke('create-premium-campaign', {
+        body: {
+          shopId,
+          planId: selectedPlan.id,
+          title: title.trim(),
+          description: description.trim() || null,
+        },
       });
 
       if (error) throw error;
 
       Alert.alert(
-        'Campagne créée ! 🎉',
-        `Votre campagne "${title}" a été créée. Procédez au paiement pour l'activer.`
+        'Campagne activée',
+        `Votre campagne "${title}" est maintenant active grâce à votre abonnement Premium.`
       );
       setTitle('');
       setDescription('');
@@ -141,6 +142,9 @@ function CreateCampaignModal({
       onCreated();
       onClose();
     } catch (err: any) {
+      if (String(err?.message ?? '').includes('Premium entitlement')) {
+        onRequirePremium();
+      }
       Alert.alert('Erreur', err.message ?? 'Une erreur est survenue');
     } finally {
       setSubmitting(false);
@@ -189,6 +193,8 @@ function CreateCampaignModal({
                 plan={plan}
                 selected={selectedPlan?.id === plan.id}
                 onSelect={setSelectedPlan}
+                priceCaption="Inclus avec Premium"
+                ctaLabel="Configurer cette campagne"
               />
             ))}
           </ScrollView>
@@ -213,8 +219,9 @@ function CreateCampaignModal({
 
 export default function CampaignsScreen() {
   const { user, profile } = useAuth();
+  const { hasPremiumEntitlement } = useBilling();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [plans, setPlans]         = useState<CampaignPlan[]>(MOCK_CAMPAIGN_PLANS);
+  const [plans, setPlans]         = useState<CampaignPlan[]>(isMockFallbackEnabled ? MOCK_CAMPAIGN_PLANS : []);
   const [shopId, setShopId]       = useState<string | null>(null);
   const [loading, setLoading]     = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -251,6 +258,8 @@ export default function CampaignsScreen() {
 
       if (dbPlans && dbPlans.length > 0) {
         setPlans(dbPlans as CampaignPlan[]);
+      } else if (!isMockFallbackEnabled) {
+        setPlans([]);
       }
     } catch (err) {
       console.error('[CampaignsScreen]', err);
@@ -296,7 +305,7 @@ export default function CampaignsScreen() {
           <ArrowLeft size={24} color={Colors.text.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mes campagnes</Text>
-        {shopId && (
+        {shopId && hasPremiumEntitlement && (
           <TouchableOpacity
             style={styles.newBtn}
             onPress={() => setShowCreate(true)}>
@@ -326,6 +335,17 @@ export default function CampaignsScreen() {
             </View>
           )}
 
+          {shopId && !hasPremiumEntitlement && (
+            <View style={styles.infoBox}>
+              <Text style={styles.infoText}>
+                Les campagnes sponsorisées sont désormais incluses dans l abonnement SoukCI Premium géré via Google Play Billing.
+              </Text>
+              <TouchableOpacity onPress={() => router.push('/shop/premium')}>
+                <Text style={styles.infoLink}>Activer Premium →</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Campagnes existantes */}
           {campaigns.length > 0 && (
             <View style={styles.section}>
@@ -340,14 +360,20 @@ export default function CampaignsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Forfaits disponibles</Text>
             <Text style={styles.sectionSubtitle}>
-              Boostez la visibilité de votre boutique sur SoukCI
+              Les campagnes sont réservées aux boutiques Premium. Les paliers ci-dessous définissent le niveau de diffusion inclus dans l abonnement actif.
             </Text>
             {plans.map((plan) => (
               <CampaignPlanCard
                 key={plan.id}
                 plan={plan}
+                priceCaption="Inclus avec Premium"
+                ctaLabel={hasPremiumEntitlement ? 'Configurer cette campagne' : 'Activer Premium'}
                 onSelect={() => {
-                  if (shopId) setShowCreate(true);
+                  if (!hasPremiumEntitlement) {
+                    router.push('/shop/premium');
+                  } else if (shopId) {
+                    setShowCreate(true);
+                  }
                   else Alert.alert('Boutique requise', 'Créez d\'abord une boutique.');
                 }}
               />
@@ -359,11 +385,15 @@ export default function CampaignsScreen() {
       {/* Modal création */}
       {shopId && (
         <CreateCampaignModal
-          visible={showCreate}
+          visible={showCreate && hasPremiumEntitlement}
           onClose={() => setShowCreate(false)}
           shopId={shopId}
           plans={plans}
           onCreated={fetchData}
+          onRequirePremium={() => {
+            setShowCreate(false);
+            router.push('/shop/premium');
+          }}
         />
       )}
     </SafeAreaView>

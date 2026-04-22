@@ -1,37 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  TouchableOpacity,
-  ActivityIndicator,
-  TextInput,
-  Switch,
-  Alert,
-  RefreshControl,
-} from 'react-native';
-import {
-  ArrowLeft,
-  Plus,
-  Eye,
-  Clock as Click,
-  Star,
-  Package,
-  Megaphone,
-  MessageSquare,
-  TrendingUp,
-  ShoppingBag,
-} from 'lucide-react-native';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
-import { useAuth } from '@/contexts/AuthContext';
-import { router } from 'expo-router';
-import { supabase } from '@/lib/supabase';
-import { Shop, Product, Promotion, Order, Review } from '@/types/database';
-import { StatsCard, MiniChart } from '@/components/StatsCard';
 import { ReviewCard } from '@/components/ReviewCard';
+import { MiniChart, StatsCard } from '@/components/StatsCard';
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
+import { useAuth } from '@/contexts/AuthContext';
+import { useBilling } from '@/contexts/BillingContext';
 import { useStats } from '@/hooks/useStats';
+import { supabase } from '@/lib/supabase';
+import { Order, Product, Review, Shop } from '@/types/database';
+import { router } from 'expo-router';
+import {
+    ArrowLeft,
+    Clock as Click,
+    Eye,
+    Megaphone,
+    Package,
+    Plus,
+    ShoppingBag,
+    Star,
+    TrendingUp,
+} from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 // ─── Tabs ─────────────────────────────────────────────────────────
 
@@ -46,6 +46,7 @@ const TABS: { key: Tab; label: string; icon: typeof Eye }[] = [
 
 export default function MerchantDashboardScreen() {
   const { user, profile } = useAuth();
+  const { hasPremiumEntitlement, refreshCustomerInfo } = useBilling();
 
   const [shop, setShop]             = useState<Shop | null>(null);
   const [products, setProducts]     = useState<Product[]>([]);
@@ -108,6 +109,22 @@ export default function MerchantDashboardScreen() {
     loadData();
   }, [user, profile, loadData]);
 
+  useEffect(() => {
+    if (!shop?.id || !hasPremiumEntitlement || shop.is_premium) return;
+
+    const syncPremium = async () => {
+      const { error } = await supabase.functions.invoke('sync-merchant-premium', {
+        body: { shopId: shop.id },
+      });
+
+      if (!error) {
+        loadData();
+      }
+    };
+
+    void syncPremium();
+  }, [shop?.id, shop?.is_premium, hasPremiumEntitlement, loadData]);
+
   // ── Handlers ─────────────────────────────────────────────────────
   const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.price || !shop) return;
@@ -129,11 +146,22 @@ export default function MerchantDashboardScreen() {
 
   const handleTogglePremium = async () => {
     if (!shop) return;
-    const { error } = await supabase
-      .from('shops')
-      .update({ is_premium: !shop.is_premium })
-      .eq('id', shop.id);
-    if (!error) setShop((s) => s ? { ...s, is_premium: !s.is_premium } : null);
+    if (shop.is_premium) {
+      try {
+        await refreshCustomerInfo();
+        const { error } = await supabase.functions.invoke('sync-merchant-premium', {
+          body: { shopId: shop.id },
+        });
+        if (error) throw error;
+        await loadData();
+        Alert.alert('Premium synchronisé', 'Votre statut Premium a été resynchronisé depuis RevenueCat.');
+      } catch (err: any) {
+        Alert.alert('Synchronisation impossible', err.message ?? 'Le statut Premium n a pas pu être synchronisé.');
+      }
+      return;
+    }
+
+    router.push('/shop/premium');
   };
 
   const handleToggleProductAvailability = async (product: Product) => {
@@ -326,20 +354,17 @@ export default function MerchantDashboardScreen() {
             {/* Premium toggle */}
             <View style={styles.card}>
               <View style={styles.premiumRow}>
-                <View>
+                <View style={styles.premiumInfo}>
                   <Text style={styles.premiumTitle}>Mode Premium</Text>
                   <Text style={styles.premiumSub}>
                     {shop.is_premium
-                      ? 'Votre boutique est mise en avant ✨'
-                      : 'Activez pour plus de visibilité'}
+                      ? 'Votre boutique est mise en avant et vos campagnes peuvent être activées.'
+                      : 'Activez l abonnement Premium pour débloquer la mise en avant et les campagnes.'}
                   </Text>
                 </View>
-                <Switch
-                  value={shop.is_premium}
-                  onValueChange={handleTogglePremium}
-                  trackColor={{ false: Colors.border.light, true: Colors.primary }}
-                  thumbColor={Colors.white}
-                />
+                <TouchableOpacity style={styles.premiumCta} onPress={handleTogglePremium}>
+                  <Text style={styles.premiumCtaText}>{shop.is_premium ? 'Synchroniser' : 'Activer'}</Text>
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -575,8 +600,18 @@ const styles = StyleSheet.create({
   chartsRow:  { flexDirection: 'row', gap: Spacing.sm },
   card: { backgroundColor: Colors.white, borderRadius: BorderRadius.xl, padding: Spacing.md, ...Shadows.sm },
   premiumRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  premiumInfo: { flex: 1, marginRight: Spacing.md },
   premiumTitle: { fontSize: FontSizes.md, fontWeight: '700', color: Colors.text.primary },
   premiumSub:   { fontSize: FontSizes.xs, color: Colors.text.secondary, marginTop: 2 },
+  premiumCta: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.round,
+    minHeight: 40,
+    paddingHorizontal: Spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  premiumCtaText: { color: Colors.white, fontSize: FontSizes.sm, fontWeight: '700' },
   shortcuts: { flexDirection: 'row', gap: Spacing.sm },
   shortcut: {
     flex: 1,

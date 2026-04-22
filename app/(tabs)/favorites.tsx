@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
-import { Colors, Spacing, FontSizes } from '@/constants/theme';
 import { ShopCard } from '@/components/ShopCard';
+import { Colors, FontSizes, Spacing } from '@/constants/theme';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Shop } from '@/types/database';
-import { useAuth } from '@/contexts/AuthContext';
 import { router, useFocusEffect } from 'expo-router';
 import { Heart } from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import {
+    ActivityIndicator,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 export default function FavoritesScreen() {
   const { user } = useAuth();
@@ -22,18 +22,7 @@ export default function FavoritesScreen() {
   const [loading, setLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
-  useFocusEffect(
-    React.useCallback(() => {
-      if (user) {
-        loadFavorites();
-      } else {
-        setFavorites([]);
-        setLoading(false);
-      }
-    }, [user])
-  );
-
-  const loadFavorites = async () => {
+  const loadFavorites = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -56,7 +45,18 @@ export default function FavoritesScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        loadFavorites();
+      } else {
+        setFavorites([]);
+        setLoading(false);
+      }
+    }, [user, loadFavorites])
+  );
 
   const handleFavoritePress = async (shopId: string) => {
     if (!user) return;

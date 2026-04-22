@@ -2,6 +2,7 @@ import { CategoryCard } from '@/components/CategoryCard';
 import { PromoCard } from '@/components/PromoCard';
 import { SearchBar } from '@/components/SearchBar';
 import { ShopCard } from '@/components/ShopCard';
+import { isMockFallbackEnabled, mergeByIdWithOptionalFallback } from '@/constants/runtime';
 import { BorderRadius, Colors, FontSizes, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { MOCK_CATEGORIES, MOCK_PROMOTIONS, MOCK_SHOPS_WITH_RELATIONS } from '@/data/mockData';
@@ -21,17 +22,6 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-
-function mergeById<T extends { id: string }>(primary: T[] = [], fallback: T[] = []): T[] {
-  const seen = new Set<string>();
-  const merged: T[] = [];
-  for (const item of [...primary, ...fallback]) {
-    if (seen.has(item.id)) continue;
-    seen.add(item.id);
-    merged.push(item);
-  }
-  return merged;
-}
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -75,8 +65,8 @@ export default function HomeScreen() {
           .limit(8),
       ]);
 
-      const mergedCategories = mergeById(categoriesRes.data ?? [], MOCK_CATEGORIES);
-      const mergedShops = mergeById(shopsRes.data ?? [], MOCK_SHOPS_WITH_RELATIONS)
+      const mergedCategories = mergeByIdWithOptionalFallback(categoriesRes.data, MOCK_CATEGORIES);
+      const mergedShops = mergeByIdWithOptionalFallback(shopsRes.data, MOCK_SHOPS_WITH_RELATIONS)
         .filter((s) => s.is_active)
         .sort((a, b) => {
           if (Number(b.is_premium) !== Number(a.is_premium)) {
@@ -84,8 +74,8 @@ export default function HomeScreen() {
           }
           return b.rating_avg - a.rating_avg;
         });
-      const mergedPromos = mergeById(
-        (promosRes.data as (Promotion & { shop?: { id: string; name: string } })[] | null) ?? [],
+      const mergedPromos = mergeByIdWithOptionalFallback(
+        promosRes.data as (Promotion & { shop?: { id: string; name: string } })[] | null,
         MOCK_PROMOTIONS
       ).filter((p) => p.is_active);
 
@@ -98,6 +88,13 @@ export default function HomeScreen() {
       setActivePromos(mergedPromos);
     } catch (error) {
       console.error('Error loading data:', error);
+      if (!isMockFallbackEnabled) {
+        setCategories([]);
+        setFeaturedShops([]);
+        setPopularShops([]);
+        setActivePromos([]);
+        return;
+      }
       const fallbackShops = MOCK_SHOPS_WITH_RELATIONS
         .filter((s) => s.is_active)
         .sort((a, b) => {

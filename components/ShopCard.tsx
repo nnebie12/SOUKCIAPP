@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable } from 'react-native';
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
 import { Shop } from '@/types/database';
-import { Colors, Spacing, BorderRadius, FontSizes, Shadows } from '@/constants/theme';
-import { MapPin, Star, Heart, Phone } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { Heart, MapPin, Star } from 'lucide-react-native';
+import React from 'react';
+import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface ShopCardProps {
   shop: Shop;

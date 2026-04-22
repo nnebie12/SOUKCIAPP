@@ -1,23 +1,24 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Linking,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
-import { ArrowLeft, MapPin, Phone, Share2, Star } from 'lucide-react-native';
-import { Colors, Spacing, FontSizes, BorderRadius, Shadows } from '@/constants/theme';
-import { supabase } from '@/lib/supabase';
-import { Shop } from '@/types/database';
+import { itemWithOptionalFallback } from '@/constants/runtime';
+import { BorderRadius, Colors, FontSizes, Shadows, Spacing } from '@/constants/theme';
 import { MOCK_SHOPS_WITH_RELATIONS } from '@/data/mockData';
 import { useReviews } from '@/hooks/useReviews';
+import { supabase } from '@/lib/supabase';
+import { Shop } from '@/types/database';
+import { router, useLocalSearchParams } from 'expo-router';
+import { ArrowLeft, MapPin, Phone, Share2, Star } from 'lucide-react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    Linking,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 export default function ShopDetailsScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
@@ -41,7 +42,7 @@ export default function ShopDetailsScreen() {
           .maybeSingle();
 
         const fallback = MOCK_SHOPS_WITH_RELATIONS.find((item) => item.id === shopId) ?? null;
-        setShop((data as Shop | null) ?? fallback);
+        setShop(itemWithOptionalFallback(data as Shop | null, fallback));
       } finally {
         setLoading(false);
       }

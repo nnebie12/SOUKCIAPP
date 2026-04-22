@@ -113,8 +113,8 @@ export function PaymentModal({
       }
 
       Alert.alert(
-        'Paiement non integre',
-        'Le paiement mobile n est pas encore relie a un fournisseur. La commande doit etre finalisee depuis le panier ou via le commerçant.'
+        'Validation manuelle requise',
+        'Le règlement mobile n est pas traité directement dans l application. La commande doit être confirmée avec le commerçant.'
       );
     } finally {
       setLoading(false);
