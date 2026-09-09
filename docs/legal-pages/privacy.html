@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politique de Confidentialité - SoukCI</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #ff6b35;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 30px;
+        }
+        .last-updated {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .contact {
+            background: #f0f0f0;
+            padding: 15px;
+            border-left: 4px solid #ff6b35;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Politique de Confidentialité - SoukCI</h1>
+        <p class="last-updated">Dernière mise à jour : Avril 2026</p>
+        <p style="color: #666; font-size: 0.95em; margin-bottom: 20px;">
+            <strong>Juridiction :</strong> Cette politique est établie conformément aux lois de la Côte d'Ivoire, 
+            notamment la Loi n°2018-670 du 01/10/2018 relative à la protection des données personnelles 
+            et les dispositions de l'OHADA (Organisation pour l'Harmonisation en Afrique du Droit des Affaires).
+        </p>
+
+        <h2>1. Introduction</h2>
+        <p>SoukCI ("nous", "notre" ou "l'application") est une plateforme opérant en Côte d'Ivoire. Nous respectons la confidentialité de nos utilisateurs en conformité avec la législation ivoirienne. Cette politique explique comment nous collectons, utilisons, partageons et protégeons vos données personnelles.</p>
+
+        <h2>2. Données que nous collectons</h2>
+
+        <h3>2.1 Informations de compte</h3>
+        <ul>
+            <li>Nom complet</li>
+            <li>Adresse email</li>
+            <li>Numéro de téléphone</li>
+            <li>Statut de commerçant (le cas échéant)</li>
+            <li>Type d'activité (pour les commerçants)</li>
+        </ul>
+
+        <h3>2.2 Activité utilisateur</h3>
+        <ul>
+            <li>Boutiques consultées et favorites</li>
+            <li>Avis et notations laissés</li>
+            <li>Historique de commandes</li>
+            <li>Campagnes consultées ou demandées</li>
+        </ul>
+
+        <h3>2.3 Informations transactionnelles</h3>
+        <ul>
+            <li>Adresse de livraison</li>
+            <li>Moyen de paiement préféré (Wave, Orange Money, MTN Money, espèces)</li>
+            <li>Détails des commandes (produits, prix, statut)</li>
+            <li>Métadonnées de paiement (statut pending/complété)</li>
+        </ul>
+
+        <h3>2.4 Données de localisation</h3>
+        <p>Si vous accordez la permission, nous collectons votre position GPS (approximative ou précise) pour afficher les boutiques à proximité. Sans cette permission, nous utilisons une localisation par défaut sur Abidjan.</p>
+
+        <h3>2.5 Données de diagnostic</h3>
+        <p>Si Sentry est configuré, nous collectons :</p>
+        <ul>
+            <li>Rapports de crash et erreurs</li>
+            <li>Logs de performance</li>
+            <li>Informations sur l'appareil (type, OS, version)</li>
+        </ul>
+
+        <h2>3. Comment nous utilisons vos données</h2>
+        <ul>
+            <li>Fournir et maintenir l'application</li>
+            <li>Authentifier votre accès sécurisé</li>
+            <li>Traiter vos commandes et paiements</li>
+            <li>Améliorer nos services et corriger les bugs</li>
+            <li>Vous envoyer des notifications sur commandes/comptes (si activé)</li>
+            <li>Analyser l'utilisation et les performances</li>
+        </ul>
+
+        <h2>4. Partage de données avec des tiers</h2>
+        <ul>
+            <li><strong>Supabase</strong> : gère l'authentification, la base de données et les fonctions serveur</li>
+            <li><strong>Sentry</strong> (si configuré) : reçoit les rapports d'erreurs et diagnostics</li>
+            <li><strong>CinetPay</strong> : traite les paiements mobiles (Wave, Orange Money, MTN Money)</li>
+            <li><strong>RevenueCat</strong> : gère les abonnements Premium via Google Play Billing</li>
+        </ul>
+        <p>Nous ne vendons jamais vos données à des tiers.</p>
+
+        <h2>5. Sécurité</h2>
+        <ul>
+            <li>Toute communication est en HTTPS</li>
+            <li>L'authentification utilise des JWT sécurisés via Supabase Auth</li>
+            <li>Pas de stockage des mots de passe côté application (gérés par Supabase)</li>
+            <li>Row Level Security (RLS) en base de données pour isoler les données par utilisateur</li>
+            <li>Validation des entrées côté client ET serveur</li>
+        </ul>
+
+        <h2>6. Retention des données</h2>
+        <ul>
+            <li>Les données de compte restent tant que vous n'avez pas supprimé votre compte</li>
+            <li>L'historique de commandes est conservé 2 ans pour conformité</li>
+            <li>Les avis et notes restent jusqu'à suppression volontaire</li>
+            <li>Les logs de diagnostic sont supprimés automatiquement après 30 jours</li>
+        </ul>
+
+        <h2>7. Vos droits</h2>
+        <p>Vous avez le droit de :</p>
+        <ul>
+            <li>Accéder à vos données personnelles</li>
+            <li>Demander une correction ou suppression</li>
+            <li>Vous opposer au traitement de vos données</li>
+            <li>Demander une copie exploitable de vos données</li>
+            <li>Révoquer votre consentement pour la localisation</li>
+        </ul>
+        <p>Pour exercer ces droits, consultez la page <a href="data-rights.html">Droits Utilisateur</a>.</p>
+
+        <h2>8. Suppression de compte</h2>
+        <p>Vous pouvez demander la suppression complète de votre compte via l'application ou sur <a href="delete-account.html">cette page</a>. Cela supprimera :</p>
+        <ul>
+            <li>Votre authentification</li>
+            <li>Votre profil utilisateur</li>
+            <li>Vos commandes et adresses de livraison (données anonymisées après 30 jours)</li>
+            <li>Vos favoris et historique</li>
+        </ul>
+
+        <h2>9. Modifications de cette politique</h2>
+        <p>Nous pouvons mettre à jour cette politique. Nous vous notifierons des changements importants via l'application.</p>
+
+        <h2>10. Autorités & Contacts</h2>
+        <div class="contact">
+            <h3>Responsable de la confidentialité :</h3>
+            <p>Email : <a href="mailto:privacy@soukci.app">privacy@soukci.app</a></p>
+            <p style="margin-top: 15px;">Pour toute question ou réclamation concernant le traitement de vos données, 
+            contactez-nous à cette adresse.</p>
+        </div>
+
+        <div class="contact" style="margin-top: 20px;">
+            <h3>Autorités de Protection des Données - Côte d'Ivoire :</h3>
+            <p><strong>Commission Nationale de l'Informatique et des Libertés (CNIL-CI)</strong></p>
+            <p>Adresse : Immeuble ARUE, 5ème étage, Plateau - Abidjan, Côte d'Ivoire</p>
+            <p>Téléphone : +225 27 20 21 89 89</p>
+            <p>Email : <a href="mailto:contact@cnilci.ci">contact@cnilci.ci</a></p>
+            <p style="margin-top: 10px; font-size: 0.95em; color: #666;">
+                Si vous estimez que vos droits ne sont pas respectés par SoukCI, 
+                vous pouvez déposer une plainte auprès de la CNIL-CI.
+            </p>
+        </div>
+
+        <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #ff6b35; margin-top: 20px; border-radius: 4px;">
+            <h3 style="color: #2c3e50; margin-bottom: 10px;">Applicabilité de cette politique</h3>
+            <p>Cette politique est régie par les lois de la Côte d'Ivoire et conform aux exigences de la 
+            <strong>Loi n°2018-670 du 01/10/2018</strong> relative à la protection des données personnelles. 
+            En cas de conflit entre cette politique et la loi ivoirienne, la loi ivoirienne prévaut.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/legal/privacy", "destination": "/privacy.html" },
+    { "source": "/legal/data-rights", "destination": "/data-rights.html" },
+    { "source": "/legal/delete-account", "destination": "/delete-account.html" }
+  ]
+}

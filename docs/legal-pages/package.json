@@ -1,0 +1,12 @@
+{
+  "name": "soukci-legal-site",
+  "version": "1.0.0",
+  "description": "SoukCI Legal Pages - Privacy, Data Rights, Account Deletion",
+  "scripts": {
+    "build": "echo 'Static site ready'",
+    "start": "node server.js"
+  },
+  "keywords": ["soukci", "privacy", "legal"],
+  "author": "SoukCI",
+  "license": "All rights reserved"
+}
